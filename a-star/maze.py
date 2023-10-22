@@ -1,13 +1,15 @@
 import sys
+from operator import attrgetter
 
 class Node():
-    def __init__(self, state, parent, action):
+    def __init__(self, state, parent, action, cost):
         self.state = state
         self.parent = parent
         self.action = action
-        # self.cost = cost
+        self.cost = cost
+        # self.heuristic = heuristic
 
-#DFS
+
 class StackFrontier():
     def __init__(self):
         self.frontier = []
@@ -29,7 +31,7 @@ class StackFrontier():
             self.frontier = self.frontier[:-1]
             return node
 
-#BFS
+
 class QueueFrontier(StackFrontier):
 
     def remove(self):
@@ -39,11 +41,31 @@ class QueueFrontier(StackFrontier):
             node = self.frontier[0]
             self.frontier = self.frontier[1:]
             return node
+        
+class GBFS(StackFrontier):
+
+    def remove(self):
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            node =  min(self.frontier,key=attrgetter('cost'))
+            self.frontier.remove(node)
+            return node
+        
+# class AStar(StackFrontier):
+
+#     def remove(self):
+#         if self.empty():
+#             raise Exception("empty frontier")
+#         else:
+#             node =  self.frontier
+#             self.frontier.remove(node)
+#             return node
 
 class Maze():
-
+    
     def __init__(self, filename):
-
+        self.costs = []
         # Read file and set height and width of maze
         with open(filename) as f:
             contents = f.read()
@@ -88,7 +110,7 @@ class Maze():
         for i, row in enumerate(self.walls):
             for j, col in enumerate(row):
                 if col:
-                    print("█", end="")
+                    print("-", end="")
                 elif (i, j) == self.start:
                     print("A", end="")
                 elif (i, j) == self.goal:
@@ -116,7 +138,11 @@ class Maze():
                 result.append((action, (r, c)))
         return result
 
-
+    def calculateFunction(self, n1, n2):
+        row1, col1 = n1
+        row2, col2 = n2
+        return (abs(row1-row2)+abs(col1-col2))
+    
     def solve(self):
         """Finds a solution to maze, if one exists."""
 
@@ -124,9 +150,8 @@ class Maze():
         self.num_explored = 0
 
         # Initialize frontier to just the starting position
-        start = Node(state=self.start, parent=None, action=None)
-        # frontier = StackFrontier()
-        frontier = QueueFrontier()
+        start = Node(state=self.start, parent=None, action=None,cost=-1)
+        frontier = GBFS()
         frontier.add(start)
 
         # Initialize an empty explored set
@@ -147,13 +172,17 @@ class Maze():
             if node.state == self.goal:
                 actions = []
                 cells = []
+                costs = []
                 while node.parent is not None:
                     actions.append(node.action)
                     cells.append(node.state)
+                    costs.append(node.cost)
                     node = node.parent
+                    
                 actions.reverse()
                 cells.reverse()
-                self.solution = (actions, cells)
+                costs.reverse()
+                self.solution = (actions, cells, costs)
                 return
 
             # Mark node as explored
@@ -162,12 +191,18 @@ class Maze():
             # Add neighbors to frontier
             for action, state in self.neighbors(node.state):
                 if not frontier.contains_state(state) and state not in self.explored:
-                    child = Node(state=state, parent=node, action=action)
+                    distance = self.calculateFunction(state,self.goal)
+                    child = Node(state=state, parent=node, action=action,cost=distance)
                     frontier.add(child)
+            for i in range(self.width):
+                _cost= []
+                for j in range(self.height):
+                    _cost.append(self.calculateFunction((j,i), self.goal))
+                self.costs.append(_cost)
 
 
     def output_image(self, filename, show_solution=True, show_explored=False):
-        from PIL import Image, ImageDraw
+        from PIL import Image, ImageDraw,ImageFont
         cell_size = 50
         cell_border = 2
 
@@ -180,6 +215,8 @@ class Maze():
         draw = ImageDraw.Draw(img)
 
         solution = self.solution[1] if self.solution is not None else None
+        font = ImageFont.load_default()  
+
         for i, row in enumerate(self.walls):
             for j, col in enumerate(row):
 
@@ -199,6 +236,7 @@ class Maze():
                 elif solution is not None and show_solution and (i, j) in solution:
                     fill = (220, 235, 113)
 
+
                 # Explored
                 elif solution is not None and show_explored and (i, j) in self.explored:
                     fill = (212, 97, 85)
@@ -213,14 +251,16 @@ class Maze():
                       ((j + 1) * cell_size - cell_border, (i + 1) * cell_size - cell_border)]),
                     fill=fill
                 )
+                draw.text(
+                        (j * cell_size + cell_border, i * cell_size + cell_border), 
+                        str(self.costs[j][i]),font=font)  
+
 
         img.save(filename)
 
 
-if len(sys.argv) != 2:
-    sys.exit("Usage: python maze.py maze.txt")
 
-m = Maze(sys.argv[1])
+m = Maze("maze2.txt")
 print("Maze:")
 m.print()
 print("Solving...")
