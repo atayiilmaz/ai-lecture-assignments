@@ -2,12 +2,12 @@ import sys
 from operator import attrgetter
 
 class Node():
-    def __init__(self, state, parent, action, cost):
+    def __init__(self, state, parent, action, cost, fCost):
         self.state = state
         self.parent = parent
         self.action = action
-        self.cost = cost
-        # self.heuristic = heuristic
+        self.cost = cost #heuristic cost
+        self.fCost = fCost #final cost for a star algo f(n) = g(n) + h(n)
 
 
 class StackFrontier():
@@ -51,17 +51,19 @@ class GBFS(StackFrontier):
             node =  min(self.frontier,key=attrgetter('cost'))
             self.frontier.remove(node)
             return node
+
+class AStar(StackFrontier):
+
+    def remove(self):
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            # nIdx = 0
         
-# class AStar(StackFrontier):
-
-#     def remove(self):
-#         if self.empty():
-#             raise Exception("empty frontier")
-#         else:
-#             node =  self.frontier
-#             self.frontier.remove(node)
-#             return node
-
+            node = min(self.frontier, key=lambda node: node.fCost)
+            self.frontier.remove(node)
+            return node
+    
 class Maze():
     
     def __init__(self, filename):
@@ -150,8 +152,8 @@ class Maze():
         self.num_explored = 0
 
         # Initialize frontier to just the starting position
-        start = Node(state=self.start, parent=None, action=None,cost=-1)
-        frontier = GBFS()
+        start = Node(state=self.start, parent=None, action=None,cost=-1, fCost=0)
+        frontier = AStar()
         frontier.add(start)
 
         # Initialize an empty explored set
@@ -191,8 +193,10 @@ class Maze():
             # Add neighbors to frontier
             for action, state in self.neighbors(node.state):
                 if not frontier.contains_state(state) and state not in self.explored:
+                    pathCost = node.cost + 1
                     distance = self.calculateFunction(state,self.goal)
-                    child = Node(state=state, parent=node, action=action,cost=distance)
+                    fCost = pathCost + distance
+                    child = Node(state=state, parent=node, action=action,cost=distance, fCost=fCost)
                     frontier.add(child)
             for i in range(self.width):
                 _cost= []
