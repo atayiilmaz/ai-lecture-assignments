@@ -2,13 +2,13 @@ import sys
 from operator import attrgetter
 
 class Node():
-    def __init__(self, state, parent, action, cost, fCost):
+    def __init__(self, state, parent, action, cost):
         self.state = state
         self.parent = parent
         self.action = action
-        self.cost = cost #heuristic cost
-        self.fCost = fCost #final cost for a star algo f(n) = g(n) + h(n)
-
+        self.cost = cost # distance to the goal
+        self.gcost = 0 # distance start node to state
+        self.fcost = 0 # f(n) = g(n) + h(n)
 
 class StackFrontier():
     def __init__(self):
@@ -48,22 +48,22 @@ class GBFS(StackFrontier):
         if self.empty():
             raise Exception("empty frontier")
         else:
-            node =  min(self.frontier,key=attrgetter('cost'))
+            node = min(self.frontier,key=attrgetter('cost'))
             self.frontier.remove(node)
             return node
 
-class AStar(StackFrontier):
-
+class AStarFrontier(StackFrontier):
     def remove(self):
         if self.empty():
             raise Exception("empty frontier")
         else:
-            # nIdx = 0
-        
-            node = min(self.frontier, key=lambda node: node.fCost)
-            self.frontier.remove(node)
+            fcosts = list(map(lambda n: n.fcost, self.frontier))
+            selected = fcosts.index(min(fcosts))
+            node = self.frontier[selected]
+            self.frontier.pop(selected)
             return node
-    
+
+
 class Maze():
     
     def __init__(self, filename):
@@ -152,8 +152,8 @@ class Maze():
         self.num_explored = 0
 
         # Initialize frontier to just the starting position
-        start = Node(state=self.start, parent=None, action=None,cost=-1, fCost=0)
-        frontier = AStar()
+        start = Node(state=self.start, parent=None, action=None,cost=-1)
+        frontier = AStarFrontier()
         frontier.add(start)
 
         # Initialize an empty explored set
@@ -193,10 +193,10 @@ class Maze():
             # Add neighbors to frontier
             for action, state in self.neighbors(node.state):
                 if not frontier.contains_state(state) and state not in self.explored:
-                    pathCost = node.cost + 1
-                    distance = self.calculateFunction(state,self.goal)
-                    fCost = pathCost + distance
-                    child = Node(state=state, parent=node, action=action,cost=distance, fCost=fCost)
+                    distance = self.calculateFunction(state,self.goal) #heuristic
+                    child = Node(state=state, parent=node, action=action,cost=distance)
+                    child.gcost = abs(child.state[0] - self.start[0]) + abs(child.state[1] - self.start[1]) 
+                    child.fcost = child.gcost + distance
                     frontier.add(child)
             for i in range(self.width):
                 _cost= []
