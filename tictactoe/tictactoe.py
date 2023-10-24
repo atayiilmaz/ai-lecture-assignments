@@ -2,7 +2,7 @@
 Tic Tac Toe Player
 """
 
-import math
+from copy import deepcopy
 
 X = "X"
 O = "O"
@@ -43,8 +43,7 @@ def actions(board):
         for j in range(3):
             if board[i][j] == EMPTY:
                 possibleActions.append((i,j))
-            print(possibleActions)
-    
+
     return possibleActions
 
 
@@ -55,14 +54,13 @@ def result(board, action):
     i = action[0]
     j = action[1]
 
-    if board[i,j] != EMPTY:
-        raise Exception("Invalid action")
-
     if i not in [0,1,2] or j not in [0,1,2]:
         raise Exception("i or j not valid")
-    
-    nextBoard = board
-    nextBoard[i,j] = player(board)
+    if board[i][j] != EMPTY:
+        raise Exception("Invalid action")
+
+    nextBoard = deepcopy(board)
+    nextBoard[i][j] = player(board)
 
     return nextBoard
 
@@ -83,9 +81,9 @@ def winner(board):
         for i in range(3):
             vertical += str(board[i][j])
 
-    if vertical.count(X) == 3:
+        if vertical == "XXX":
             return X
-    if vertical.count(O) == 3:
+        if vertical == "OOO":
             return O
 
     diag1 = ""
@@ -95,9 +93,9 @@ def winner(board):
     for i in range(3): # determines the second diagonal(top-right to bottom-left)
         diag2 += str(board[i][2-i])
 
-    if diag1.count(X) == 3: # if the diagonal is (xxx)
+    if diag1 == "XXX": # if the diagonal is (xxx)
         return X
-    if diag2.count(O) == 3: # if the diagonal is (ooo) 
+    if diag2 == "OOO": # if the diagonal is (ooo) 
         return O
 
     return None # if the board is not a terminal state or tie state
@@ -135,6 +133,44 @@ def minimax(board):
     if terminal(board) == True:
         return None
     
-        
+    current_player = player(board)
 
-    # raise NotImplementedError
+    if current_player == X:
+        best_score = -2
+        best_action = None
+        for action in actions(board):
+            result_board = result(board, action)
+            score = minimax_score(result_board, X)
+            if score > best_score:
+                best_score = score
+                best_action = action
+        return best_action
+    else:
+        best_score = 2
+        best_action = None
+        for action in actions(board):
+            result_board = result(board, action)
+            score = minimax_score(result_board, O)
+            if score < best_score:
+                best_score = score
+                best_action = action
+        return best_action
+
+def minimax_score(board, current_player):
+    if terminal(board):
+        return utility(board)
+
+    if current_player == X:
+        best_score = -2
+        for action in actions(board):
+            result_board = result(board, action)
+            score = minimax_score(result_board, X)
+            best_score = max(score, best_score)
+        return best_score
+    else:
+        best_score = 2
+        for action in actions(board):
+            result_board = result(board, action)
+            score = minimax_score(result_board, O)
+            best_score = min(score, best_score)
+        return best_score
