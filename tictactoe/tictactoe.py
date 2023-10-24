@@ -8,7 +8,6 @@ X = "X"
 O = "O"
 EMPTY = None
 
-
 def initial_state():
     """
     Returns starting state of the board.
@@ -39,7 +38,6 @@ def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-
     possibleActions = []
     for i in range(3):
         for j in range(3):
@@ -73,7 +71,36 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    raise NotImplementedError
+
+    for i in range(3): #checks the rows if there are 3 Xs or 3 Os
+        if i.count(X) == 3:
+            return X
+        if i.count(O) == 3:
+            return O
+    
+    for j in range(3): #checks the columns if there are 3 Xs or 3 Os
+        vertical = ()
+        for i in range(3):
+            vertical += board[i][j]
+
+    if vertical.count(X) == 3:
+            return X
+    if vertical.count(O) == 3:
+            return O
+
+    diagonal1 = ()
+    diagonal2 = ()
+    for i in range(3): # determines the main diagonal(top-left to bottom-right)
+        diagonal1 += board[i][i]
+    for i in range(3): # determines the second diagonal(top-right to bottom-left)
+        diagonal2 += board[i][2-i]
+
+    if diagonal1.count(X) == 3:
+        return X
+    if diagonal2.count(O) == 3:
+        return O
+
+    return None
 
 
 def terminal(board):
@@ -95,5 +122,3 @@ def minimax(board):
     Returns the optimal action for the current player on the board.
     """
     raise NotImplementedError
-
-actions(initial_state())
