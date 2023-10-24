@@ -72,53 +72,69 @@ def winner(board):
     Returns the winner of the game, if there is one.
     """
 
-    for i in range(3): #checks the rows if there are 3 Xs or 3 Os
+    for i in board: # checks the rows if there are 3 Xs or 3 Os
         if i.count(X) == 3:
             return X
         if i.count(O) == 3:
             return O
     
-    for j in range(3): #checks the columns if there are 3 Xs or 3 Os
-        vertical = ()
+    for j in range(3): # checks the columns if there are 3 Xs or 3 Os
+        vertical = ""
         for i in range(3):
-            vertical += board[i][j]
+            vertical += str(board[i][j])
 
     if vertical.count(X) == 3:
             return X
     if vertical.count(O) == 3:
             return O
 
-    diagonal1 = ()
-    diagonal2 = ()
+    diag1 = ""
+    diag2 = ""
     for i in range(3): # determines the main diagonal(top-left to bottom-right)
-        diagonal1 += board[i][i]
+        diag1 += str(board[i][i])
     for i in range(3): # determines the second diagonal(top-right to bottom-left)
-        diagonal2 += board[i][2-i]
+        diag2 += str(board[i][2-i])
 
-    if diagonal1.count(X) == 3:
+    if diag1.count(X) == 3: # if the diagonal is (xxx)
         return X
-    if diagonal2.count(O) == 3:
+    if diag2.count(O) == 3: # if the diagonal is (ooo) 
         return O
 
-    return None
+    return None # if the board is not a terminal state or tie state
 
 
 def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    raise NotImplementedError
+
+    if winner(board) or not actions(board):
+        return True
+    
+    return False
 
 
 def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    raise NotImplementedError
+
+    if winner(board) == X:
+        return 1
+    if winner(board) == O:
+        return -1
+    else:
+        return 0
 
 
 def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    raise NotImplementedError
+
+    if terminal(board) == True:
+        return None
+    
+        
+
+    # raise NotImplementedError
