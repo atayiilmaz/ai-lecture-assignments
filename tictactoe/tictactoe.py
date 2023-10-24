@@ -132,15 +132,13 @@ def minimax(board):
 
     if terminal(board) == True:
         return None
-    
-    current_player = player(board)
 
-    if current_player == X:
+    if player(board) == X:
         best_score = -2
         best_action = None
         for action in actions(board):
             result_board = result(board, action)
-            score = minimax_score(result_board, X)
+            score = minimax_score(result_board)
             if score > best_score:
                 best_score = score
                 best_action = action
@@ -150,27 +148,27 @@ def minimax(board):
         best_action = None
         for action in actions(board):
             result_board = result(board, action)
-            score = minimax_score(result_board, O)
+            score = minimax_score(result_board)
             if score < best_score:
                 best_score = score
                 best_action = action
         return best_action
 
-def minimax_score(board, current_player):
+def minimax_score(board):
     if terminal(board):
         return utility(board)
 
-    if current_player == X:
+    if player(board) == X:
         best_score = -2
         for action in actions(board):
             result_board = result(board, action)
-            score = minimax_score(result_board, X)
+            score = minimax_score(result_board)
             best_score = max(score, best_score)
         return best_score
     else:
         best_score = 2
         for action in actions(board):
             result_board = result(board, action)
-            score = minimax_score(result_board, O)
+            score = minimax_score(result_board)
             best_score = min(score, best_score)
         return best_score
